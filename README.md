@@ -1,21 +1,21 @@
-# template-repository
-codering
-Tijdens het opleveren van code zien we graag dat er een README bestand wordt meegeleverd, dit maakt het gemakkelijker voor een ander om met jouw code verder te gaan of er gebruik van te maken.
-Deze README beschrijft het project, wat je nodig hebt om de code te gebruiken en hoe je de code kunt gebruiken. Uiteraard kan dit ietsje afwijken aan de hand van welke taal je hebt geprogrammeerd, maar blijf het liefst zo dicht bij mogelijk bij deze standaarden.
+# TIFA Lemele Frame Localisation
+FOR EXTENSIVE DOCUMENTATION, SEE [THIS FILE](Documentation%20Azure%20Kinect.docx).
 
-De volgende dingen zien we graag in een README:
-- beschrijving: graag zien we een korte beschrijving van je project. dus een korte uitleg wat je code doet als je het gebruikt.
-- imports en versies: graag zien we een lijst met alle imports, packages, software, etc die je hebt gebruikt met de versies. Denk hierbij aan je python versie, dat je iets met "pip install" hebt geinstalleerd of dat je ubuntu 23.04 als operating system hebt gebruikt (dus ook welke versie je hebt geinstalleerd). (test dus ook je code op een andere laptop!!! hierdoor weet je zeker dat je alles genoteerd hebt)
-- architectuur: graag zien we een korte beschrijving van de architectuur van je project. welke bestanden hebben welke bestanden nodig en wat kun je in welk bestand vinden.
-- reference: graag zien we een lijst met welke code je niet zelf hebt gemaakt of gebaseerd hebt op een ander zijn code met daarbij een link naar de originele code en een datum waarop je die code hebt geraadpleegd. Dit zorgt ervoor dat de juiste mensen credit krijgen. (let op, ook als je een functie ergens vandaan haalt en aanpast hoor je nog steeds te zeggen wie daar credit voor krijgt).
-- usage: op het moment dat je extra hardware zoals een robot gebruikt is het fijn als er ook iets uitgelegd wordt over hoe je alles hebt aangesloten en opgestart. Misschien is het wel van belang dat je eerst het programma op de cobot start voordat je de python code op je laptop start.
+The goal of this project is to detect, localise and determine the orientation of a window frame using a Microsoft Azure Kinect DK. Image processing is done using Halcon. This repository contains a number of files. A quick explanation on which file is which:
 
-- commenting: in code is het vrij normaal om comments te gebruiken om je code duidelijker te maken. Graag zien we dan ook dat dit gedaan wordt.
-	- functie beschrijving: Liefst zien we dat er per functie met een comment uitgelegd wordt hoe de functie werkt en waarvoor ie bedoeld wordt (dit kan vaak in 1 zin). mocht de functie lang zijn dan zien we ook graag comments tussendoor.
-	- Bestand beschrijving: Liefst zien we bovenaan elk bestand dat er een korte beschrijving staat van welke functies er in het bestand geprogrammeerd zijn.
-	- Variabele beschrijving:
+- KinectCloud based colored point cloud grabber.hdev: use KinectCloud and CloudCompare to grab and convert point clouds
+- Azure Kinect Filtering.hdev: first iteration of the filtering script
+- Filters Demo simplified.hdev: a more advanced and simplified version of Azure Kinect Filtering
+- Filters Demo simplified SHOWEVERYSTEP.hdev: the same as the original, but it will visualise the object_model_3d with every step of the process
+- Window Frame Filtering.hdev: combination of KinectCloud based colored point cloud grabber and Filters Demo simplified SHOWEVERYSTEP. this script does everything, from grabbing a point cloud, visualising every step and generating an output .txt file
+- Cobot/Demo TiFa 10-01-2024.urp: cobot demo application used for the demo day
 
-mocht je wat inspiratie willen kun je op de github hieronder even kijken.
-https://github.com/matiassingers/awesome-readme
+## Imports and versions
+Microsoft Windows 11 22H2
+Halcon - MVTec HDevelop 23.05 Progress
+Since the Azure Kinect isn't directly compatible with Halcon, the following programs are used to capture and convert point clouds:
+- KinectCloud (capturing coloured point clouds) https://github.com/widVE/KinectCloud
+- CloudCompare (converting captured .pts file to .ply) https://www.cloudcompare.org/
 
-https://integrity.mit.edu/handbook/academic-integrity-handbook
+## External devices
+Universal Robots UR10e Cobot
