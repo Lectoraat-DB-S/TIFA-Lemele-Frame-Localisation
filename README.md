@@ -11,8 +11,9 @@ The goal of this project is to detect, localise and determine the orientation of
 - [Cobot/Demo TiFa 10-01-2024.urp](Cobot/Demo%20TiFa%2010-01-2024.urp): Cobot demo application used for the demo day
 
 ## Imports and versions
-Microsoft Windows 11 22H2
-[Halcon](https://www.mvtec.com/products/halcon/) - MVTec HDevelop 23.05 Progress
+- Microsoft Windows 11 22H2
+- [Halcon](https://www.mvtec.com/products/halcon/) - MVTec HDevelop 23.05 Progress
+
 Since the Azure Kinect isn't directly compatible with Halcon, the following programs are used to capture and convert point clouds:
 - [KinectCloud](https://github.com/widVE/KinectCloud) (capturing coloured point clouds)
 - [CloudCompare](https://www.cloudcompare.org/) (converting captured .pts file to .ply)
