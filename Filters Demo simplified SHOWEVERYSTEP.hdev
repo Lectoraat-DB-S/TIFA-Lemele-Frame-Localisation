@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="23.05.0.0">
+<procedure name="main">
+<interface/>
+<body>
+<c>* Script to analyze data from Azure Kinect</c>
+<c>* Johan van Voskuilen, 20231012</c>
+<c>* Jeroen Poetsma, 20231013</c>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Variables</c>
+<c>* Device IDs (Centre C)</c>
+<l>IDC := '000237925112'</l>
+<l>IDR := 'NA'</l>
+<l>IDL := 'NA'</l>
+<c></c>
+<c>* Set display resolution</c>
+<l>Width := 1280</l>
+<l>Height := 720</l>
+<c></c>
+<c>* Scanning box measurements (in meters)</c>
+<l>Xmin := -0.7</l>
+<l>Xmax := 0.6</l>
+<l>Ymin := -0.6</l>
+<l>Ymax := 1.1</l>
+<l>Zmin := 1.55</l>
+<l>Zmax := 1.95</l>
+<c></c>
+<c>* Pose translation (camera to robot/cobot) (in meters/degrees)</c>
+<l>TransX := -0.1385739</l>
+<l>TransY := 0.77807</l>
+<l>TransZ := 0.380945</l>
+<l>RotX := -90</l>
+<l>RotY := 0</l>
+<l>RotZ := 180</l>
+<c></c>
+<c>* Path to point cloud</c>
+<l>Path := 'C:/Users/jeroe/Desktop/TestTranslatie_'</l>
+<c></c>
+<c>* Path to save output parameters to</c>
+<l>SaveTxt := 'C:/Users/jeroe/Desktop/TestTranslatie.txt'</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Read-in data (Centre)</c>
+<l>read_object_model_3d (Path + IDC + '.ply', 'mm', [], [], PointCloudC, Status)</l>
+<c></c>
+<c>* Start program timer</c>
+<l>count_seconds(StartFilter)</l>
+<c></c>
+<c>* Threshold data (Centre)</c>
+<l>dev_open_window (0, 0, Width, Height, 'black', Window3D)</l>
+<l>set_display_font (Window3D, 28, 'mono', 'true', 'false')</l>
+<l>create_pose (0.0, 0.0, 40.0, 30, 30, 0, 'Rp+T', 'gba', 'point', VisPose)</l>
+<l>gen_cam_par_area_scan_division (0.025, 0, 5.2e-06, 5.2e-06, Width / 4.0, Height / 4.0, Width / 2.0, Height / 2.0, CameraParam)</l>
+<l>Instructions := ['Rotate: Left button','Zoom: Shift + left button','Move: Ctrl + left button']</l>
+<l>visualize_object_model_3d (Window3D, PointCloudC, CameraParam, VisPose, ['disp_pose', 'red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['true', 'red','green','blue'], 'Captured point cloud', [], Instructions, PoseOut)</l>
+<c></c>
+<l>select_points_object_model_3d (PointCloudC, 'point_coord_x', Xmin, Xmax, PointCloudCThresholded)</l>
+<l>visualize_object_model_3d (Window3D, PointCloudCThresholded, CameraParam, VisPose, ['disp_pose', 'red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['true', 'red','green','blue'], 'Thresholding X axis', [], Instructions, PoseOut)</l>
+<c></c>
+<l>select_points_object_model_3d (PointCloudCThresholded, 'point_coord_y', Ymin, Ymax, PointCloudCThresholded)</l>
+<l>visualize_object_model_3d (Window3D, PointCloudCThresholded, CameraParam, VisPose, ['disp_pose', 'red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['true', 'red','green','blue'], 'Thresholding Y axis', [], Instructions, PoseOut)</l>
+<c></c>
+<l>select_points_object_model_3d (PointCloudCThresholded, 'point_coord_z', Zmin, Zmax, PointCloudCThresholded)</l>
+<l>visualize_object_model_3d (Window3D, PointCloudCThresholded, CameraParam, VisPose, ['disp_pose', 'red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['true', 'red','green','blue'], 'Thresholding Z axis', [], Instructions, PoseOut)</l>
+<c></c>
+<c>* Filter out noise (Centre)</c>
+<l>get_object_model_3d_params (PointCloudCThresholded, 'num_points', NumPoints)</l>
+<l>NumNeighbors := 15</l>
+<l>InlierRate := 99</l>
+<l>get_object_model_3d_params (PointCloudCThresholded, 'neighbor_distance ' + NumNeighbors, DistanceDistribution)</l>
+<l>Distance := sort(DistanceDistribution)[|DistanceDistribution| * InlierRate / 100]</l>
+<l>select_points_object_model_3d (PointCloudCThresholded, 'num_neighbors ' + Distance, 15, NumPoints, PointCloudCThresholdedFiltered)</l>
+<l>visualize_object_model_3d (Window3D, PointCloudCThresholdedFiltered, CameraParam, VisPose, ['disp_pose', 'red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['true', 'red','green','blue'], 'Filtering out small groups of points', [], Instructions, PoseOut)</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Get bounding box and pose</c>
+<l>smallest_bounding_box_object_model_3d (PointCloudCThresholdedFiltered, 'oriented', BoundingBoxPose, LengthX, LengthY, LengthZ)</l>
+<l>gen_box_object_model_3d (BoundingBoxPose, LengthX, LengthY, LengthZ, BoundingBox)</l>
+<l>visualize_object_model_3d (Window3D, BoundingBox, CameraParam, VisPose, ['alpha', 'disp_pose'], [0.5,'true'], 'Bounding box of window frame', [], Instructions, PoseOut)</l>
+<c></c>
+<c>* Translate pose as seen from camera to pose as seen from origin robot/cobot</c>
+<l>create_pose (0, 0, 0, RotX, RotY, RotZ, 'Rp+T', 'abg', 'point', PoseRot)</l>
+<l>rigid_trans_object_model_3d (BoundingBox, PoseRot, BoundingBoxTrans)</l>
+<l>get_object_model_3d_params (BoundingBoxTrans, 'primitive_pose', BoundingBoxTransPose)</l>
+<l>BoundingBoxTransPose[0] := BoundingBoxTransPose[0] + TransX</l>
+<l>BoundingBoxTransPose[1] := BoundingBoxTransPose[1] + TransY</l>
+<l>BoundingBoxTransPose[2] := BoundingBoxTransPose[2] + TransZ</l>
+<c></c>
+<l>gen_box_object_model_3d (BoundingBoxTransPose, LengthX, LengthY, LengthZ, BoundingBoxTransPoseDisp)</l>
+<l>create_pose (0.0, 0.0, 50.0, RotX - 180 + 30, RotY, RotZ - 30, 'Rp+T', 'gba', 'point', VisPoseTrans)</l>
+<l>visualize_object_model_3d (Window3D, BoundingBoxTransPoseDisp, CameraParam, VisPoseTrans, ['alpha', 'disp_pose'], [0.5,'true'], 'Bounding box translated to cobot origin', [], Instructions, PoseOut)</l>
+<c></c>
+<c>* End program timer</c>
+<l>count_seconds(EndFilter)</l>
+<l>RunTime := EndFilter - StartFilter</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Write output data to file</c>
+<l>open_file (SaveTxt, 'output', FileHandle)</l>
+<l>fwrite_string (FileHandle, \
+           'The detected measurements (BoundingBox) are as follows:' + '\n' + '\n'\
+           'Measured X axis (width in m):' + '\n' + LengthX + '\n' + '\n'\
+           'Measured Y axis (height in m):' + '\n' + LengthY + '\n' + '\n'\
+           'Measured Z axis (depth in m, inaccurate):' + '\n' + LengthZ + '\n' + '\n'\
+           '\n' + 'The detected translated pose values (BoundingBoxTransPose) are as follows:' + '\n' + '\n'\
+           'Transformation on the x axis (in mm) (-270/+90):' + '\n' + BoundingBoxTransPose[0] * 1000 + '\n' + '\n'\
+           'Transformation on the y axis (in mm) (+270/-90):' + '\n' + BoundingBoxTransPose[1] * 1000 + '\n' + '\n'\
+           'Transformation on the z axis (in mm) (-180/+180):' + '\n' + BoundingBoxTransPose[2] * 1000 + '\n' + '\n'\
+           'Rotation around the x axis (in degrees):' + '\n' + BoundingBoxTransPose[3] + '\n' + '\n'\
+           'Rotation around the y axis (in degrees):' + '\n' + BoundingBoxTransPose[5] + '\n' + '\n'\
+           'Rotation around the z axis (in degrees):' + '\n' + [BoundingBoxTransPose[4] - 180] + '\n' + '\n')</l>
+<l>close_file (FileHandle)</l>
+<c></c>
+<c>* Display output data written to file</c>
+<l>dev_open_window (0, 0, 512, 512, 'black', WindowHandleText)</l>
+<l>disp_text (WindowHandleText, \
+           'The detected measurements (BoundingBox) are as follows:' + '\n' + '\n'\
+           'Measured X axis (width in m):' + '\n' + LengthX + '\n' + '\n'\
+           'Measured Y axis (height in m):' + '\n' + LengthY + '\n' + '\n'\
+           'Measured Z axis (depth in m, inaccurate):' + '\n' + LengthZ + '\n' + '\n'\
+           '\n' + 'The detected translated pose values (BoundingBoxTransPose) are as follows:' + '\n' + '\n'\
+           'Transformation on the x axis (in mm) (-270/+90):' + '\n' + BoundingBoxTransPose[0] * 1000 + '\n' + '\n'\
+           'Transformation on the y axis (in mm) (+270/-90):' + '\n' + BoundingBoxTransPose[1] * 1000 + '\n' + '\n'\
+           'Transformation on the z axis (in mm) (-180/+180):' + '\n' + BoundingBoxTransPose[2] * 1000 + '\n' + '\n'\
+           'Rotation around the x axis (in degrees):' + '\n' + BoundingBoxTransPose[3] + '\n' + '\n'\
+           'Rotation around the y axis (in degrees):' + '\n' + BoundingBoxTransPose[5] + '\n' + '\n'\
+           'Rotation around the z axis (in degrees):' + '\n' + [BoundingBoxTransPose[4] - 180] + '\n' + '\n'\
+           , 'window', 12, 12, 'black', [], [])</l>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

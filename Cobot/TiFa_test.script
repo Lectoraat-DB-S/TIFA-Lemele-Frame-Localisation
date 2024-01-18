@@ -1,0 +1,47 @@
+var = open ('Variables.txt', 'r')
+
+def readVars(): 
+    # Measurements of frame (in m)
+    global width = var.read_input_float_register()
+    global height = 
+    global depth = 0.09
+
+    # Plane pose of frame (in m, in degrees)
+    global poseX = 0.5
+    global poseY = 0.5
+    global poseZ = 0.5
+    global rotX = 170
+    global rotY = 10
+    global rotZ = 0
+end
+
+
+# Offset distances (in m)
+global tcpOffset = 0.2 #between tcp and window frame
+
+# Convert degrees to radians
+def convertDegreesToRadians():
+    global rotX = d2r(rotX)
+    global rotY = d2r(rotY)
+    global rotZ = d2r(rotZ)
+end
+
+# Create pose based on Halcon planePose
+def createPose():
+    global planePose = p[poseX, poseY, poseZ, rotX, rotY, rotZ]
+end
+
+# Create waypoints (9 waypoints)
+def createWaypoints():
+    global wayPointTopLeft = p[[poseX - width / 2], [poseY + height / 2], [poseZ - tcpOffset], rotX, rotY, rotZ]
+    global wayPointTopCentre = p[poseX, [poseY + height / 2], [poseZ - tcpOffset], rotX, rotY, rotZ]
+    global wayPointTopRight = p[[poseX + width / 2], [poseY + height / 2], [poseZ - tcpOffset], rotX, rotY, rotZ]
+
+    global wayPointCentreLeft = p[[poseX - width / 2], poseY, [poseZ - tcpOffset], rotX, rotY, rotZ]
+    global wayPointCentreCentre = p[poseX, poseY, [poseZ - tcpOffset], rotX, rotY, rotZ]
+    global wayPointCentreRight = p[[poseX + width / 2], poseY, [poseZ - tcpOffset], rotX, rotY, rotZ]
+
+    global wayPointBottomLeft = p[[poseX - width / 2], [poseY - height / 2], [poseZ - tcpOffset], rotX, rotY, rotZ]
+    global wayPointBottomCentre = p[poseX, [poseY - height / 2], [poseZ - tcpOffset], rotX, rotY, rotZ]
+    global wayPointBottomRight = p[[poseX + width / 2], [poseY - height / 2], [poseZ - tcpOffset], rotX, rotY, rotZ]
+end

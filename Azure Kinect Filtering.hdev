@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="23.05.0.0">
+<procedure name="main">
+<interface/>
+<body>
+<c>* Script to analyze data from Azure Kinect</c>
+<c>* Johan van Voskuilen, 20231012</c>
+<c>* Jeroen Poetsma, 20231013</c>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Variables</c>
+<c>* Device IDs (Centre C)</c>
+<l>IDC := '000237925112'</l>
+<l>IDR := 'NA'</l>
+<l>IDL := 'NA'</l>
+<c></c>
+<c>* Set display resolution</c>
+<l>Width := 1920</l>
+<l>Height := 1080</l>
+<c></c>
+<c>* Selection box coarse filters (in meters)</c>
+<l>Xmin := -0.6</l>
+<l>Xmax := 0.6</l>
+<l>Ymin := -0.28</l>
+<l>Ymax := 1.1</l>
+<l>Zmin := 1.5</l>
+<l>Zmax := 2.1</l>
+<c></c>
+<c>* Path</c>
+<l>Path := 'C:/Users/jeroe/source/repos/KinectCloud/x64/Debug/TestSetupScheef_'</l>
+<c></c>
+<c>* General variables</c>
+<l>NumNeighbors := 15</l>
+<l>InlierRate := 99</l>
+<l>Offset := -0.022</l>
+<l>OffsetCorrection := 0.98 * 0.97</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Read-in data (Centre)</c>
+<l>read_object_model_3d (Path + IDC + '.ply', 'mm', [], [], PointCloudC, Status)</l>
+<c></c>
+<c>* Start program timer</c>
+<l>count_seconds(StartFilter)</l>
+<c></c>
+<c>* Coarse filter data (window frame is at 1.24m) (Centre)</c>
+<l>select_points_object_model_3d (PointCloudC, 'point_coord_x', Xmin, Xmax, PointCloudCThresholded)</l>
+<c></c>
+<l>select_points_object_model_3d (PointCloudCThresholded, 'point_coord_y', Ymin, Ymax, PointCloudCThresholded)</l>
+<l>select_points_object_model_3d (PointCloudCThresholded, 'point_coord_z', Zmin, Zmax, PointCloudCThresholded)</l>
+<c></c>
+<c>* Filter out noise (Centre)</c>
+<l>get_object_model_3d_params (PointCloudCThresholded, 'num_points', NumPoints)</l>
+<l>get_object_model_3d_params (PointCloudCThresholded, 'neighbor_distance ' + NumNeighbors, DistanceDistribution)</l>
+<l>Distance := sort(DistanceDistribution)[|DistanceDistribution| * InlierRate / 100]</l>
+<l>select_points_object_model_3d (PointCloudCThresholded, 'num_neighbors ' + Distance, 15, NumPoints, PointCloudCThresholdedFiltered)</l>
+<c></c>
+<c>* Generate plane, get plane pose and cut off points behind plane (loop to pull plane forward to match front) (Centre)</c>
+<l>select_points_object_model_3d (PointCloudCThresholdedFiltered, 'point_coord_z', Zmin, Zmax, PointCloudCPlane)</l>
+<l>for Index := 1 to 20 by 1</l>
+<l>    fit_primitives_object_model_3d (PointCloudCPlane, 'primitive_type', 'plane', Plane)</l>
+<l>    get_object_model_3d_params (Plane, 'primitive_pose', PlanePose)</l>
+<l>    pose_invert (PlanePose, PlanePoseInvert)</l>
+<l>    rigid_trans_object_model_3d (PointCloudCPlane, PlanePoseInvert, PointCloudCPlane)</l>
+<l>    rigid_trans_object_model_3d (Plane, PlanePoseInvert, Plane)</l>
+<l>    select_points_object_model_3d (PointCloudCPlane, 'point_coord_z', Offset, Zmin, PointCloudCPlane)</l>
+<l>    Offset := Offset * OffsetCorrection</l>
+<l>endfor</l>
+<c></c>
+<c>* Get bounding box (Centre)</c>
+<l>get_object_model_3d_params (PointCloudCThresholdedFiltered, 'bounding_box1', BoundingBoxC)</l>
+<l>gen_box_object_model_3d (PlanePoseInvert, 3-0, 4-1, 5-2, BoundingBoxC)</l>
+<c></c>
+<c>* End program timer</c>
+<l>count_seconds(EndFilter)</l>
+<l>RunTime := EndFilter - StartFilter</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Show data (Centre)</c>
+<l>dev_open_window (0, 0, Width / 2, Height / 2, 'black', Window3D)</l>
+<l>create_pose (0.0, 0.0, 50.0, 0, 0, 0, 'Rp+T', 'gba', 'point', Pose)</l>
+<l>gen_cam_par_area_scan_division (0.025, 0, 5.2e-06, 5.2e-06, Width / 4.0, Height / 4.0, Width / 2.0, Height / 2.0, CameraParam)</l>
+<l>Instructions := ['Rotate: Left button','Zoom: Shift + left button','Move: Ctrl + left button']</l>
+<l>visualize_object_model_3d (Window3D, PointCloudCThresholdedFiltered, CameraParam, Pose, ['red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['red','green','blue'], [], [], Instructions, PoseOut)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>

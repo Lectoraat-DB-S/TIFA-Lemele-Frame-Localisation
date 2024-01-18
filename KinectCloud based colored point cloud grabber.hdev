@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hdevelop file_version="1.2" halcon_version="23.05.0.0">
+<procedure name="main">
+<interface/>
+<body>
+<c>* Program to call for capturing colour point clouds, converting to .ply and saving them properly for Azure Kinect</c>
+<c>* Jeroen Poetsma 20231121</c>
+<c></c>
+<c>* Sources</c>
+<c>* Color point cloud generation (.pts): https://github.com/widVE/KinectCloud</c>
+<c>* Converting point cloud (.pts) to .ply: https://www.cloudcompare.org/</c>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Variables</c>
+<c>* Device IDs (Centre C)</c>
+<l>IDC := '000237925112'</l>
+<l>IDR := 'NA'</l>
+<l>IDL := 'NA'</l>
+<c></c>
+<c>* Set display resolution</c>
+<l>Width := 1920</l>
+<l>Height := 1080</l>
+<c></c>
+<c>* Configure camera params</c>
+<c>* Color exposure [-ce] (time in nanoseconds)</c>
+<l>Exposure := ' -ce 70000'</l>
+<c></c>
+<c>* White balance [-cw] in Kelvin (steps of 10)</c>
+<l>WhiteBalance := ' -cw 3600'</l>
+<c></c>
+<c>* Declare device topology [-dt] (Standalone [a], Master [m], Slave [s])</c>
+<l>Topology := ' -dt ' + IDC + ' a'</l>
+<c></c>
+<c>* Declare color resolution [-dra {res}] for all, [-dr ser {res}] for target (res: 720p, 1080p, 1440p, 1536p, 2160p, 3072p)</c>
+<l>Resolution := ' -dra 1080p'</l>
+<c></c>
+<c>* Declare depth mode [-dma {mode}] for all, [dm ser {mode}] for target (mode: NFOV_2X2BINNED, NFOV_UNBINNED, WFOV_2X2BINNED, WFOV_UNBINNED)</c>
+<l>DepthMode := ' -dma NFOV_UNBINNED'</l>
+<c></c>
+<c>* Set file path and name [-o] (prefix [-o] and suffix {%s.pts} in system_call) (%s = camera serial number, %f = frame number)</c>
+<l>Path := 'C:/Users/jeroe/source/repos/KinectCloud/x64/Debug/DemoStakeholders_'</l>
+<c></c>
+<c>* Set KinectCloud directory</c>
+<l>PathKinectCloud := 'C:/Users/jeroe/source/repos/KinectCloud/x64/Debug'</l>
+<c></c>
+<c>* Set CloudCompare directory</c>
+<l>PathCloudCompare := 'C:/Program Files/CloudCompare'</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Start program timer</c>
+<l>count_seconds(StartGrab)</l>
+<c></c>
+<c>* Take point cloud snapshot using KinectCloud (.pts file) (-s for snapshot, -da to apply params to all devices)</c>
+<l>set_current_dir (PathKinectCloud)</l>
+<l>system_call ('KinectCloud.exe -s -da' + Exposure + WhiteBalance + Topology + Resolution + DepthMode + ' -o ' + Path + '%s.pts')</l>
+<c></c>
+<c>* Load point clouds in CloudCompare and export as .ply</c>
+<l>set_current_dir (PathCloudCompare)</l>
+<l>system_call ('CloudCompare.exe -SILENT -O ' + Path + IDC + '.pts' + ' -NO_TIMESTAMP -C_EXPORT_FMT PLY -SAVE_CLOUDS FILE "' + Path + IDC + '.ply"')</l>
+<c></c>
+<c>* End program timer</c>
+<l>count_seconds(EndGrab)</l>
+<l>RunTimeGrab := EndGrab - StartGrab</l>
+<c></c>
+<c>* _________________________________________________________________________</c>
+<c></c>
+<c>* Read converted point clouds</c>
+<l>read_object_model_3d (Path + IDC + '.ply', 'mm', ['file_type'], ['ply'], PointCloudC, Status)</l>
+<c></c>
+<c>* Display</c>
+<l>dev_open_window (0, 0, Width / 2, Height / 2, 'black', Window3D)</l>
+<l>create_pose (0.0, 0.0, 50.0, 0, 0, 0, 'Rp+T', 'gba', 'point', Pose)</l>
+<l>gen_cam_par_area_scan_division (0.025, 0, 5.2e-06, 5.2e-06, Width / 4.0, Height / 4.0, Width / 2.0, Height / 2.0, CameraParam)</l>
+<l>Instructions := ['Rotate: Left button','Zoom: Shift + left button','Move: Ctrl + left button']</l>
+<l>visualize_object_model_3d (Window3D, PointCloudC, CameraParam, Pose, ['red_channel_attrib','green_channel_attrib','blue_channel_attrib'], ['red','green','blue'], [], [], Instructions, PoseOut)</l>
+<c></c>
+</body>
+<docu id="main">
+<parameters/>
+</docu>
+</procedure>
+</hdevelop>
